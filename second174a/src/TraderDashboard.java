@@ -29,16 +29,17 @@ public class TraderDashboard {
 	// used for deposit/withdraw listener
 	static String accountID;
 
-	public static JFrame createDashboard(String username) {
+	public static void createDashboard(String username) {
 
 		// username is the distinct name of the user logged in at the moment.
 		user = username;
+		System.out.println(user);
 
 		frame = new JFrame(username + "'s Dashboard");
 		frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-		Dimension dim = new Dimension(800, 800);
+		Dimension dimen = new Dimension(800, 800);
 
-		frame.getContentPane().setPreferredSize(dim);
+		frame.getContentPane().setPreferredSize(dimen);
 		JPanel panel = new JPanel(new GridLayout(0,2));
 
 		TraderDashboard d = new TraderDashboard();
@@ -73,7 +74,7 @@ public class TraderDashboard {
 
 		frame.setVisible(true);
 
-		return frame;
+		//return frame;
 	}
 
 	class DepositListener implements ActionListener {
@@ -141,7 +142,7 @@ public class TraderDashboard {
 			frame.setVisible(false);
 			frame.dispose();
 
-			// BuyStocksPage.createStocksPage(user);
+			BuyStocksPage.createStocksPage(user);
 
 		}
 
