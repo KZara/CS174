@@ -1,7 +1,4 @@
 
-import Database.DbClient;
-import Database.DbQuery;
-import Database.RetrievalQuery;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -15,8 +12,12 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+
+import com.mysql.jdbc.ResultSetMetaData;
 
 public class TraderDashboard {
 
@@ -25,9 +26,8 @@ public class TraderDashboard {
 	static JTextField movie_info;
 
 	static String user;
-
-	// used for deposit/withdraw listener
-	static String accountID;
+	static String currentTaxID = "";
+	
 
 	public static void createDashboard(String username) {
 
@@ -53,12 +53,11 @@ public class TraderDashboard {
 		JButton transaction_history = new JButton("Transaction History");
 		transaction_history.addActionListener(d.new TransactionListener());
 		actor_stock = new JTextField("Type stock symbol Here to see current price");
-		JButton go_1 = new JButton("Go");
+		JButton go_1 = new JButton("Find Stock");
 		go_1.addActionListener(d.new Go1Listener());
 		movie_info = new JTextField("Type name of movie to see information");
-		JButton go_2 = new JButton("Go");
-		go_2.addActionListener(d.new Go2Listener());
-
+		JButton reviews = new JButton("Find Reviews");
+		reviews.addActionListener(d.new ReviewsListener());
 		panel.add(deposit);
 		panel.add(buy);
 		panel.add(market_balance);
@@ -66,7 +65,7 @@ public class TraderDashboard {
 		panel.add(actor_stock);
 		panel.add(go_1);
 		panel.add(movie_info);
-		panel.add(go_2);
+		panel.add(reviews);
 
 		// 4. Size the frame.
 		frame.pack();
@@ -74,61 +73,24 @@ public class TraderDashboard {
 
 		frame.setVisible(true);
 
-		//return frame;
+		String taxID = "select taxID from Customer where username = '" + user + "'";
+		try {
+			StarsRUs.statement = StarsRUs.connection.createStatement();
+			ResultSet resultSet = StarsRUs.statement.executeQuery(taxID);
+			if (resultSet.next()) currentTaxID = resultSet.getString(1);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+		System.out.println(currentTaxID);
 	}
 
 	class DepositListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// go to deposit/withdraw page
-
-			StringBuilder findAccountID = new StringBuilder("SELECT A.ID ").append("FROM Account A ")
-					.append("WHERE ").append("A.username = ").append("'").append(user).append("'");
-
-			DbClient.getInstance().runQuery(new RetrievalQuery(findAccountID.toString()) {
-				@Override
-				public void onComplete(ResultSet result) {
-
-					try {
-						if (!result.next()) {
-
-							accountID = "";
-
-							return;
-						}
-					} catch (HeadlessException | SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-					try {
-						accountID = result.getString(1);
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			});
-
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			System.out.println("account id IS " + accountID);
-
-			if (accountID == "") {
-				JOptionPane.showMessageDialog(null, "no accounts shown for given username",
-						"Error with Deposit/Withdraw", 0);
-				return;
-			}
-
-			frame.setVisible(false);
-			frame.dispose();
-			accountID = "12356";
-
-			// DepositPage.createDepositPage(user, accountID);
+			
 		}
 
 	}
@@ -153,37 +115,23 @@ public class TraderDashboard {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			// show balance
-			// get balance using username
-			StringBuilder addEntry = new StringBuilder("SELECT M.balance ").append("FROM MarketAccount M ")
-					.append("WHERE M.username = ").append("'").append(user).append("'");
-			DbClient.getInstance().runQuery(new RetrievalQuery(addEntry.toString()) {
-				@Override
-				public void onComplete(ResultSet result) {
-					String balance = "";
-
-					try {
-						if (!result.next()) {
-							JOptionPane.showMessageDialog(null, "no accounts shown for given username", "Show Balance",
-									1);
-							return;
-						}
-					} catch (HeadlessException | SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-
-					try {
-						balance = result.getString(1);
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					String display_string = "Balance is " + balance + " dollars";
-					JOptionPane.showMessageDialog(null, display_string, "Show Balance", 1);
-				}
-			});
-
-			return;
+			String balanceQuery = "select balance from MarketAccount where taxID = " + currentTaxID;
+			String balance = "";
+			try {
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            ResultSet resultSet = StarsRUs.statement.executeQuery(balanceQuery);
+	
+	            if (resultSet.next()) balance = resultSet.getString(1);
+	
+	            
+	            
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
+			
+			JOptionPane.showMessageDialog(null, "Balance = " + balance,balance, 1);
+			
 		}
 
 	}
@@ -192,71 +140,151 @@ public class TraderDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// deposit page
+			String transactions = "select * from Transactions where taxID = '"
+					+ currentTaxID + "'";
+			String results = "";
+			try {
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            ResultSet resultSet = StarsRUs.statement.executeQuery(transactions);
+	
+	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+	            int columnsNumber = rsmd.getColumnCount();
+	            if (!resultSet.next()){
+	            	JOptionPane.showMessageDialog(null, "No transactions yet!","Transactions", 1);
+	            	return;
+	            }
+	            	
+				
+	            while (resultSet.next()) {
+	            	  for (int i = 1; i <= columnsNumber; i++) {
+	                      if (i > 1) {
+	                    	  System.out.print(",  ");
+	                    	  results += ", ";
+	                      }
+	                      String columnValue = resultSet.getString(i);
+	                      results += columnValue + " ";
+	                      System.out.print(columnValue);
+	                  }
+	            	  results += "\n";
+	                  System.out.println("");
+	                  
+	            }
+	            
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
+			JTextArea msg = new JTextArea(results);
+			msg.setWrapStyleWord(true);
+
+			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+			JOptionPane.showMessageDialog(null, scrollPane);
 
 		}
 
 	}
 
 	class Go1Listener implements ActionListener {
+		
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			String input =  actor_stock.getText();
+			if (input.length()!=3)
+				JOptionPane.showMessageDialog(null, "Not a valid Stock",input, 1);
+				
+			String stock = "select S.current_price, A.act_name, S.stock_symbol  "
+					+ "from Stock S join ActorDirector A on A.stock_symbol = S.stock_symbol "
+					+ "where S.stock_symbol = '"
+					+ input + "'";
+
+			String results = "";
+			try {
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            ResultSet resultSet = StarsRUs.statement.executeQuery(stock);
+	
+	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+	            int columnsNumber = rsmd.getColumnCount();
+	
+	            while (resultSet.next()) {
+	            	  for (int i = 1; i <= columnsNumber; i++) {
+	                      if (i > 1) {
+	                    	  System.out.print(",  ");
+	                    	  results += ", ";
+	                      }
+	                      String columnValue = resultSet.getString(i);
+	                      results += columnValue + " ";
+	                      System.out.print(columnValue);
+	                  }
+	            	  results += "\n";
+	                  System.out.println("");
+	                  
+	            }
+	            
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
+			
+			JTextArea msg = new JTextArea(results);
+			msg.setWrapStyleWord(true);
+
+			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+			JOptionPane.showMessageDialog(null, scrollPane);
+	}
+
+	
+		class ReviewsListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// gets information about the entered stock
+			String input =  movie_info.getText();
+			String reviews = "select R.author,R.review,M.title "
+					+ "from Reviews R,Movies M "
+					+ "where R.movie_id = (select id from Movies m1  "
+					+ "where m1.title = '" + input + "' and m1.id = M.id)";
+			String results = "";
+			try {
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            ResultSet resultSet = StarsRUs.statement.executeQuery(reviews);
+	
+	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+	            int columnsNumber = rsmd.getColumnCount();
+	
+	            while (resultSet.next()) {
+	            	  for (int i = 1; i <= columnsNumber; i++) {
+	                      if (i > 1) {
+	                    	  System.out.print(",  ");
+	                    	  results += ", ";
+	                      }
+	                      String columnValue = resultSet.getString(i);
+	                      results += columnValue + " ";
+	                      System.out.print(columnValue);
+	                  }
+	            	  results += "\n";
+	                  System.out.println("");
+	                  
+	            }
+	            
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
+			
+			JTextArea msg = new JTextArea(results);
+			msg.setWrapStyleWord(true);
 
-			// get stock
-			String stock = actor_stock.getText();
+			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-			if (stock.length() != 3 || !stock.matches("[a-zA-Z]+")) {
-				JOptionPane.showMessageDialog(null, "Stock Symbol must be of size 3 and can only contain letters",
-						"Stock Error", 0);
-				return;
-			}
-
-			// stock is a 3 letter string
-			// query to find stock
-
-			StringBuilder addEntry = new StringBuilder("SELECT S.current_price ").append("FROM Stock S ")
-					.append("WHERE S.stock_symbol = ").append("'").append(TraderDashboard.actor_stock.getText())
-					.append("'");
-			DbClient.getInstance().runQuery(new RetrievalQuery(addEntry.toString()) {
-				@Override
-				public void onComplete(ResultSet result) {
-					String price = "";
-
-					try {
-						if (!result.next()) {
-							JOptionPane.showMessageDialog(null, "no stocks under this symbol", "Error in Stocks", 0);
-							return;
-						}
-					} catch (HeadlessException | SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-
-					try {
-						price = result.getString(1);
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					String display_string = "Current Stock Price is " + price + " dollars";
-					JOptionPane.showMessageDialog(null, display_string, "Show Current Price", 1);
-					System.out.println("lol");
-				}
-			});
-		}
-
-	}
-
-	class Go2Listener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			// deposit page
+			JOptionPane.showMessageDialog(null, scrollPane);
+			
 
 		}
 
 	}
-
+  }
 }

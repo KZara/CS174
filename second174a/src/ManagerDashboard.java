@@ -1,7 +1,3 @@
-import Database.DbClient;
-import Database.DbQuery;
-import Database.RetrievalQuery;
-import Database.UpdateQuery;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -16,6 +12,8 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
@@ -54,7 +52,7 @@ public class ManagerDashboard {
 		dter.addActionListener(d.new DTERListener());
 		
 		customer_report = new JTextField("Type username of customer here");
-		JButton go_1 = new JButton("Go");
+		JButton go_1 = new JButton("Customer Report");
 		go_1.addActionListener(d.new Go1Listener());
 		
 		JButton delete_trans = new JButton("Delete Transactions");
@@ -82,7 +80,32 @@ public class ManagerDashboard {
 		public void actionPerformed(ActionEvent e) {
 			// add appropriate amount of interest to all accounts
 			// average daily balance
-
+			String interest = "UPDATE MarketAccount "
+					+ "set balance = balance + avgBalance*.03"
+					+ "where taxID = 5555";
+			String interestResults = "select * from MarketAccount where taxID = 5555";
+try {
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            boolean result = StarsRUs.statement.execute(interest);
+	            ResultSet resultSet = StarsRUs.statement.executeQuery(interestResults);
+	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+	            int columnsNumber = rsmd.getColumnCount();
+	
+	            while (resultSet.next()) {
+	            	  for (int i = 1; i <= columnsNumber; i++) {
+	                      if (i > 1) System.out.print(",  ");
+	                      String columnValue = resultSet.getString(i);
+	                      System.out.print(columnValue);
+	                  }
+	                  System.out.println("");
+	            }
+	            
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
+			
+			JOptionPane.showMessageDialog(null, "Interest added.",interest, 1);
 		}
 
 	}
@@ -112,6 +135,7 @@ public class ManagerDashboard {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String dter = "select C.name, C.state, M.profits from MarketAccount M join Customer C on C.taxID = M.taxID  where M.profits >= 10000";
+			String results = "";
 			try {
 	            
 	            StarsRUs.statement = StarsRUs.connection.createStatement();
@@ -122,16 +146,30 @@ public class ManagerDashboard {
 	
 	            while (resultSet.next()) {
 	            	  for (int i = 1; i <= columnsNumber; i++) {
-	                      if (i > 1) System.out.print(",  ");
+	                      if (i > 1) {
+	                    	  System.out.print(",  ");
+	                    	  results += ", ";
+	                      }
 	                      String columnValue = resultSet.getString(i);
+	                      results += columnValue + " ";
 	                      System.out.print(columnValue);
 	                  }
+	            	  results += "\n";
 	                  System.out.println("");
+	                  
 	            }
 	            
 	        } catch (SQLException ev) {
 	            ev.printStackTrace();
 	        }
+			
+			JTextArea msg = new JTextArea(results);
+			msg.setWrapStyleWord(true);
+
+			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+			JOptionPane.showMessageDialog(null, scrollPane);
 
 		}
 
@@ -142,97 +180,46 @@ public class ManagerDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// List all accounts associated with a certain customer and their
-			// balances
 			String user = customer_report.getText();
-
-			print_string = "This customer's balances are: ";
-
-			StringBuilder get_balances = new StringBuilder("SELECT M.balance ").append("FROM MarketAccount M ")
-					.append("WHERE M.username = ").append("'").append(user).append("'");
-			DbClient.getInstance().runQuery(new RetrievalQuery(get_balances.toString()) {
-				@Override
-				public void onComplete(ResultSet result) {
-					String balance = "";
-					String get_balances = "";
-					try {
-						while (result.next()) {
-							String print_string = "";
-							balance = result.getString(1);
-							get_balances += balance;
-							get_balances += ", ";
-						}
-						if (get_balances.equals("")) {
-							System.out.println("no balances");
-							ManagerDashboard.print_string = "THERE ARE NO ACCOUNTS ASSOCIATED WITH THIS USERNAME";
-							return;
-						}
-
-						display_string = print_string;
-
-						ManagerDashboard.print_string += display_string;
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
-				}
-			});
-
+			String report = "select C.name, A. stock_symbol, A.quantity, M.balance from Customer C "
+					+ "join StockAccount A on C.taxID = A.taxID "
+					+ "join MarketAccount M on C.taxID = M.taxID "
+					+ "where C.name = '" + user + "'"; 
+			String results = "";
 			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            ResultSet resultSet = StarsRUs.statement.executeQuery(report);
+	
+	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+	            int columnsNumber = rsmd.getColumnCount();
+	
+	            while (resultSet.next()) {
+	            	  for (int i = 1; i <= columnsNumber; i++) {
+	                      if (i > 1) {
+	                    	  System.out.print(",  ");
+	                    	  results += ", ";
+	                      }
+	                      String columnValue = resultSet.getString(i);
+	                      results += columnValue + " ";
+	                      System.out.print(columnValue);
+	                  }
+	            	  results += "\n";
+	                  System.out.println("");
+	                  
+	            }
+	            
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
+			
+			JTextArea msg = new JTextArea(results);
+			msg.setWrapStyleWord(true);
 
-			if (print_string.equals("THERE ARE NO ACCOUNTS ASSOCIATED WITH THIS USERNAME")) {
-				JOptionPane.showMessageDialog(null, print_string, "Show Balances", 0);
-				return;
-			}
+			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-			StringBuilder get_stock_balances = new StringBuilder("SELECT S.StockBalance ")
-					.append("FROM stock_account S ").append("WHERE S.username = ").append("'").append(user).append("'");
-			DbClient.getInstance().runQuery(new RetrievalQuery(get_stock_balances.toString()) {
-				@Override
-				public void onComplete(ResultSet result) {
-					String balance = "";
-					String get_balances = "";
-					try {
-						while (result.next()) {
-							String print_string = "";
-							balance = result.getString(1);
-							get_balances += balance;
-							get_balances += ", ";
-						}
-
-						if (get_balances.equals("")) {
-							ManagerDashboard.print_string = "THERE ARE NO ACCOUNTS ASSOCIATED WITH THIS USERNAME";
-							return;
-						}
-						display_string = print_string;
-						ManagerDashboard.print_string += display_string;
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-
-				}
-			});
-
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-
-			if (print_string.equals("THERE ARE NO ACCOUNTS ASSOCIATED WITH THIS USERNAME")) {
-				JOptionPane.showMessageDialog(null, print_string, "Show Balances", 0);
-				return;
-			}
-
-			JOptionPane.showMessageDialog(null, print_string, "Show Balances", 1);
+			JOptionPane.showMessageDialog(null, scrollPane);
 		}
 
 	}
@@ -241,47 +228,18 @@ public class ManagerDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// TODO Auto-generated method stub
-//
-//			int reply = JOptionPane.showConfirmDialog(null,
-//					"Are you sure? (Clicking yes will irretrivalbly delete all of the recorded transactions)",
-//					"Confirm Deletion", JOptionPane.YES_NO_OPTION);
-//			if (reply == JOptionPane.NO_OPTION) {
-//				return;
-//			}
-//
-//			// delete everything in buy stock
-//			StringBuilder delete_stock_buys = new StringBuilder("TRUNCATE TABLE Buy_Stock");
-//			DbClient.getInstance().runQuery(new UpdateQuery(delete_stock_buys.toString()) {
-//				@Override
-//				public void onComplete(int numRowsAffected) {
-//					System.out.println("Buy Table deleted");
-//				}
-//			});
-//
-//			StringBuilder delete_stock_sells = new StringBuilder("TRUNCATE TABLE Sell_Stock");
-//			DbClient.getInstance().runQuery(new UpdateQuery(delete_stock_sells.toString()) {
-//				@Override
-//				public void onComplete(int numRowsAffected) {
-//					System.out.println("Sell Table deleted");
-//				}
-//			});
-//
-//			StringBuilder delete_deposit = new StringBuilder("TRUNCATE TABLE Deposit");
-//			DbClient.getInstance().runQuery(new UpdateQuery(delete_deposit.toString()) {
-//				@Override
-//				public void onComplete(int numRowsAffected) {
-//					System.out.println("Deposit Table deleted");
-//				}
-//			});
-//
-//			StringBuilder delete_withdraw = new StringBuilder("TRUNCATE TABLE Withdraw");
-//			DbClient.getInstance().runQuery(new UpdateQuery(delete_withdraw.toString()) {
-//				@Override
-//				public void onComplete(int numRowsAffected) {
-//					System.out.println("Withdraw Table deleted");
-//				}
-//			});
+			String delete = "delete from Transactions";
+			try {
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            boolean resultSet = StarsRUs.statement.execute(delete);
+	            System.out.println("Transactions Deleted");
+	            JOptionPane.showMessageDialog(null, "Transactions deleted for this month.",delete, 1);
+	            
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
+			
 
 		}
 
