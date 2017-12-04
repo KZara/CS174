@@ -8,6 +8,7 @@ import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -110,44 +111,30 @@ public class ManagerDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			StringBuilder dter = new StringBuilder("select C.name, C.state, M.profits "
-					+ "from MarketAccount M join Customer C "
-					+ "on C.taxID = M.taxID  "
-					+ "where M.profits >= 10000");
-			System.out.println(dter.toString());
-			DbClient.getInstance().runQuery(new RetrievalQuery(dter.toString()){
-				@Override
-				public void onComplete(ResultSet result) {
-					String dter = "";
-					try {
-						if(!result.next()) {
-							JOptionPane.showMessageDialog(null, "No accounts made 10,000", "Show List",
-									1);
-							return;
-						}
-					} catch (HeadlessException | SQLException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-					
-					try {
-						ResultSetMetaData rsmd = (ResultSetMetaData) result.getMetaData();
-						int columnsNumber = rsmd.getColumnCount();
-						   while (result.next()) {
-						       for (int i = 1; i <= columnsNumber; i++) {
-						           if (i > 1) System.out.print(",  ");
-						           String columnValue = result.getString(i);
-						           System.out.print(columnValue + " " + rsmd.getColumnName(i));
-						       }
-						       System.out.println("lol");
-						   }
-					} catch (SQLException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			});
+			String dter = "select C.name, C.state, M.profits from MarketAccount M join Customer C on C.taxID = M.taxID  where M.profits >= 10000";
+			try {
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            ResultSet resultSet = StarsRUs.statement.executeQuery(dter);
+	
+	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+	            int columnsNumber = rsmd.getColumnCount();
+	
+	            while (resultSet.next()) {
+	            	  for (int i = 1; i <= columnsNumber; i++) {
+	                      if (i > 1) System.out.print(",  ");
+	                      String columnValue = resultSet.getString(i);
+	                      System.out.print(columnValue);
+	                  }
+	                  System.out.println("");
+	            }
+	            
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
+
 		}
+
 		
 	}
 
