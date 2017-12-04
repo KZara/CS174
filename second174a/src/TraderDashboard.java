@@ -154,7 +154,7 @@ public class TraderDashboard {
 		public void actionPerformed(ActionEvent arg0) {
 			// show balance
 			// get balance using username
-			StringBuilder addEntry = new StringBuilder("SELECT M.balance ").append("FROM Market_Account M ")
+			StringBuilder addEntry = new StringBuilder("SELECT M.balance ").append("FROM MarketAccount M ")
 					.append("WHERE M.username = ").append("'").append(user).append("'");
 			DbClient.getInstance().runQuery(new RetrievalQuery(addEntry.toString()) {
 				@Override
@@ -216,8 +216,8 @@ public class TraderDashboard {
 			// stock is a 3 letter string
 			// query to find stock
 
-			StringBuilder addEntry = new StringBuilder("SELECT A.current_stock_price ").append("FROM Actor_Stock A ")
-					.append("WHERE A.stock_symbol = ").append("'").append(TraderDashboard.actor_stock.getText())
+			StringBuilder addEntry = new StringBuilder("SELECT S.current_price ").append("FROM Stock S ")
+					.append("WHERE S.stock_symbol = ").append("'").append(TraderDashboard.actor_stock.getText())
 					.append("'");
 			DbClient.getInstance().runQuery(new RetrievalQuery(addEntry.toString()) {
 				@Override
@@ -242,6 +242,7 @@ public class TraderDashboard {
 					}
 					String display_string = "Current Stock Price is " + price + " dollars";
 					JOptionPane.showMessageDialog(null, display_string, "Show Current Price", 1);
+					System.out.println("lol");
 				}
 			});
 		}

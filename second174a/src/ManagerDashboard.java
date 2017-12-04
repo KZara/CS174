@@ -5,6 +5,7 @@ import Database.UpdateQuery;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.ResultSet;
@@ -17,12 +18,15 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
 
+import com.mysql.jdbc.ResultSetMetaData;
+
 public class ManagerDashboard {
 
 	static JFrame frame;
 	static JTextField customer_report;
 	static String manager;
 	static String print_string;
+
 
 	public static JFrame createDashboard(String username) {
 		// username is the distinct name of the user logged in at the moment.
@@ -58,6 +62,7 @@ public class ManagerDashboard {
 		panel.add(add_interest);
 		panel.add(monthly_statement);
 		panel.add(actives);
+		panel.add(dter);
 		panel.add(customer_report);
 		panel.add(go_1);
 		panel.add(delete_trans);
@@ -73,7 +78,7 @@ public class ManagerDashboard {
 	class InterestListener implements ActionListener {
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
+		public void actionPerformed(ActionEvent e) {
 			// add appropriate amount of interest to all accounts
 			// average daily balance
 
@@ -84,7 +89,7 @@ public class ManagerDashboard {
 	class StatementListener implements ActionListener {
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
+		public void actionPerformed(ActionEvent e) {
 			// TODO Auto-generated method stub
 
 		}
@@ -94,7 +99,7 @@ public class ManagerDashboard {
 	class ActivesListener implements ActionListener {
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
+		public void actionPerformed(ActionEvent e) {
 			// TODO Auto-generated method stub
 
 		}
@@ -104,11 +109,46 @@ public class ManagerDashboard {
 	class DTERListener implements ActionListener {
 
 		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			// TODO Auto-generated method stub
-
+		public void actionPerformed(ActionEvent e) {
+			StringBuilder dter = new StringBuilder("select C.name, C.state, M.profits "
+					+ "from MarketAccount M join Customer C "
+					+ "on C.taxID = M.taxID  "
+					+ "where M.profits >= 10000");
+			System.out.println(dter.toString());
+			DbClient.getInstance().runQuery(new RetrievalQuery(dter.toString()){
+				@Override
+				public void onComplete(ResultSet result) {
+					String dter = "";
+					try {
+						if(!result.next()) {
+							JOptionPane.showMessageDialog(null, "No accounts made 10,000", "Show List",
+									1);
+							return;
+						}
+					} catch (HeadlessException | SQLException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					
+					try {
+						ResultSetMetaData rsmd = (ResultSetMetaData) result.getMetaData();
+						int columnsNumber = rsmd.getColumnCount();
+						   while (result.next()) {
+						       for (int i = 1; i <= columnsNumber; i++) {
+						           if (i > 1) System.out.print(",  ");
+						           String columnValue = result.getString(i);
+						           System.out.print(columnValue + " " + rsmd.getColumnName(i));
+						       }
+						       System.out.println("lol");
+						   }
+					} catch (SQLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			});
 		}
-
+		
 	}
 
 	class Go1Listener implements ActionListener {

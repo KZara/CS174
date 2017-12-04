@@ -14,7 +14,7 @@ public class LogInPage {
 
 	static JFrame frame;
 	static JTextField username;
-	static JPasswordField password;
+	static JTextField password;
 	static boolean isManager;
 
 	public static void createLogInPage() {
@@ -29,7 +29,7 @@ public class LogInPage {
 		JLabel password_label = new JLabel("Password:");
 
 		username = new JTextField(20);
-		password = new JPasswordField(20);
+		password = new JTextField(20);
 
 		panel.add(username_label);
 		panel.add(username);
@@ -48,31 +48,33 @@ public class LogInPage {
 					isManager = true;
 				}
 				// check if username and password are good
-				StringBuilder checkList = new StringBuilder("SELECT USERS.username ");
+				String checkList = "SELECT USERS.username ";
 				if (isManager) {
-					checkList = checkList.append("FROM Manager USERS ");
+					checkList = checkList += ("FROM Manager USERS ");
 				} else {
-					checkList = checkList.append("FROM Customer USERS ");
+					checkList = checkList += ("FROM Customer USERS ");
 				}
 
-				checkList = checkList.append("WHERE USERS.username = \'").append(username.getText())
-						.append("\' AND USERS.password = \'").append(password.getPassword()).append("\'");
-				System.out.println(checkList.toString());
-				DbClient.getInstance().runQuery(new RetrievalQuery(checkList.toString()) {
-					@Override
-					public void onComplete(ResultSet result) {
-						try {
-							if (!result.next()) {
-								JOptionPane.showMessageDialog(null, "No match for username/password", "Error Message",
-										0);
-								java.lang.System.exit(0);
-							}
-						} catch (SQLException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+				checkList += "WHERE USERS.username = '";
+				checkList += username.getText();
+				checkList += "' AND USERS.password = '"; 
+				checkList += password.getText().toString();
+				checkList += "'";
+				System.out.println(checkList);
+				try {
+					StarsRUs.statement = StarsRUs.connection.createStatement();
+					ResultSet resultSet = StarsRUs.statement.executeQuery(checkList);
+					if (!resultSet.next()) {
+						JOptionPane.showMessageDialog(null, "No match for username/password", "Error Message",
+								0);
+						java.lang.System.exit(0);
 					}
-				});
+				} catch (SQLException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+	           
+
 
 				// go to new page
 				frame.setVisible(false);
