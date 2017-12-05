@@ -109,6 +109,7 @@ public class TraderDashboard {
 							+ " from MarketAccount  where taxID = " + currentTaxID + ";";
 					String withdrawStatement = "update MarketAccount  set balance = (balance - " + textField.getText()
 							+ ") where taxID = " + currentTaxID + ";";
+					String withdrawTransaction = "insert into Transactions (type, taxID, numShares, moneyAmount, date) values(\"withdraw\", " + currentTaxID + ", 0, " + textField.getText() +", (select date from MarketInfo));";
 
 					try {
 						StarsRUs.statement = StarsRUs.connection.createStatement();
@@ -116,6 +117,7 @@ public class TraderDashboard {
 						if (resultSet.next())
 							if (resultSet.getInt(1) >= 0) {
 								boolean resultSet2 = StarsRUs.statement.execute(withdrawStatement);
+								boolean resultSet3 = StarsRUs.statement.execute(withdrawTransaction);
 							} else {
 								JOptionPane.showMessageDialog(null, "Not enough funds available!");
 							}
@@ -128,9 +130,11 @@ public class TraderDashboard {
 					// deposit
 					String depositStatement = "update MarketAccount  set balance = (balance + " + textField.getText()
 							+ ") where taxID = " + currentTaxID + ";";
+					String depositTransaction = "insert into Transactions (type, taxID, numShares, moneyAmount, date) values(\"deposit\", " + currentTaxID + ", 0, " + textField.getText() +", (select date from MarketInfo));";
 					try {
 						StarsRUs.statement = StarsRUs.connection.createStatement();
 						boolean resultSet = StarsRUs.statement.execute(depositStatement);
+						boolean resultSet2 = StarsRUs.statement.execute(depositTransaction);
 					} catch (SQLException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -192,13 +196,8 @@ public class TraderDashboard {
 
 				StarsRUs.statement = StarsRUs.connection.createStatement();
 				ResultSet resultSet = StarsRUs.statement.executeQuery(transactions);
-
 				ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
 				int columnsNumber = rsmd.getColumnCount();
-				if (!resultSet.next()) {
-					JOptionPane.showMessageDialog(null, "No transactions yet!", "Transactions", 1);
-					return;
-				}
 
 				while (resultSet.next()) {
 					for (int i = 1; i <= columnsNumber; i++) {
@@ -214,17 +213,14 @@ public class TraderDashboard {
 					System.out.println("");
 
 				}
-
+				if (!results.equals(""))
+					JOptionPane.showMessageDialog(null, results);
+				else
+					JOptionPane.showMessageDialog(null, "No transactions recorded!");
 			} catch (SQLException ev) {
 				ev.printStackTrace();
 			}
-			JTextArea msg = new JTextArea(results);
-			msg.setWrapStyleWord(true);
-
-			JScrollPane scrollPane = new JScrollPane(msg, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
-			JOptionPane.showMessageDialog(null, scrollPane);
+			
 
 		}
 
