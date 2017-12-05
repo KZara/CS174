@@ -47,26 +47,41 @@ public class TraderDashboard {
 
 		JButton deposit = new JButton("Deposit/Withdraw");
 		deposit.addActionListener(d.new DepositListener());
-		JButton buy = new JButton("Buy/Sell");
+		
+		JButton buy = new JButton("Buy");
 		buy.addActionListener(d.new BuyListener());
+		
+		JButton sell = new JButton("Sell");
+		sell.addActionListener(d.new SellListener());
+		
 		JButton market_balance = new JButton("See Balance");
 		market_balance.addActionListener(d.new BalanceListener());
+		
 		JButton transaction_history = new JButton("Transaction History");
 		transaction_history.addActionListener(d.new TransactionListener());
+		
 		actor_stock = new JTextField("Type stock symbol Here to see current price");
-		JButton go_1 = new JButton("Find Stock");
-		go_1.addActionListener(d.new Go1Listener());
+		JButton find_stock = new JButton("Find Stock");
+		find_stock.addActionListener(d.new FindStockListener());
+		
 		movie_info = new JTextField("Type name of movie to see information");
 		JButton reviews = new JButton("Find Reviews");
 		reviews.addActionListener(d.new ReviewsListener());
+		
+		JButton top_reviews = new JButton("List Top Reviews");
+		top_reviews.addActionListener(d.new TopReviewsListener());
+		
+		
 		panel.add(deposit);
 		panel.add(buy);
+		panel.add(sell);
 		panel.add(market_balance);
-		panel.add(transaction_history);
 		panel.add(actor_stock);
-		panel.add(go_1);
+		panel.add(find_stock);
 		panel.add(movie_info);
 		panel.add(reviews);
+		panel.add(top_reviews);
+		panel.add(transaction_history);
 
 		// 4. Size the frame.
 		frame.pack();
@@ -149,12 +164,18 @@ public class TraderDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// go to buy/sell page
 
-			frame.setVisible(false);
-			frame.dispose();
 
-			BuyStocksPage.createStocksPage(user);
+
+		}
+
+	}
+	
+	class SellListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+
 
 		}
 
@@ -164,7 +185,7 @@ public class TraderDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			// show balance
+			// show balancereviews
 			String balanceQuery = "select balance from MarketAccount where taxID = " + currentTaxID;
 			String balance = "";
 			try {
@@ -225,7 +246,7 @@ public class TraderDashboard {
 
 	}
 
-	class Go1Listener implements ActionListener {
+	class FindStockListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -312,4 +333,15 @@ public class TraderDashboard {
 		}
 
 	}
+	
+	class TopReviewsListener implements ActionListener {
+
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+
+
+		}
+
+	}
+	
 }

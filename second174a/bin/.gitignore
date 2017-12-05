@@ -1,3 +1,9 @@
-/DebugPage.class
-/TraderDashboard$DepositListener$1.class
-/TraderDashboard$ReviewsListener.class
+/ManagerDashboard$CloseListener.class
+/ManagerDashboard$DateListener.class
+/ManagerDashboard$OpenListener.class
+/ManagerDashboard$PriceListener.class
+/ManagerDashboard$ReportListener.class
+/TraderDashboard$FindStockListener.class
+/TraderDashboard$TopReviewListener.class
+/TraderDashboard$TopReviewsListener.class
+/TraderDashboard$SellListener.class
