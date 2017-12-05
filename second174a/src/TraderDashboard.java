@@ -139,7 +139,6 @@ public class TraderDashboard {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					System.out.println("Deposit amount of $" + textField.getText());
 				}
 			}
 		}
