@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -23,6 +24,7 @@ public class ManagerDashboard {
 
 	static JFrame frame;
 	static JTextField customer_report;
+	static JTextField set_date;
 	static String manager;
 	static String print_string;
 
@@ -52,12 +54,13 @@ public class ManagerDashboard {
 		dter.addActionListener(d.new DTERListener());
 		
 		customer_report = new JTextField("Type username of customer here");
-		JButton go_1 = new JButton("Customer Report");
-		go_1.addActionListener(d.new Go1Listener());
+		JButton customerReport = new JButton("Customer Report");
+		customerReport.addActionListener(d.new ReportListener());
 		
 		JButton delete_trans = new JButton("Delete Transactions");
 		delete_trans.addActionListener(d.new DeleteListener());
 		
+		set_date = new JTextField("Enter date in format YYYY-MM-DD");
 		JButton setDate = new JButton("Set Date");
 		setDate.addActionListener(d.new DateListener());
 		
@@ -74,16 +77,18 @@ public class ManagerDashboard {
 		
 
 		panel.add(add_interest);
-		panel.add(monthly_statement);
 		panel.add(actives);
-		panel.add(dter);
-		panel.add(customer_report);
-		panel.add(go_1);
-		panel.add(delete_trans);
-		panel.add(setDate);
-		panel.add(open);
 		panel.add(close);
+		panel.add(dter);
+		panel.add(delete_trans);
+		panel.add(open);
+		panel.add(set_date);
+		panel.add(setDate);
 		panel.add(setPrice);
+		panel.add(customer_report);
+		panel.add(customerReport);
+		panel.add(monthly_statement);
+		
 
 		frame.pack();
 		frame.setContentPane(panel);
@@ -100,7 +105,8 @@ public class ManagerDashboard {
 			// add appropriate amount of interest to all accounts
 			// average daily balance
 			String interest = "UPDATE MarketAccount "
-					+ "set balance = balance + avgBalance*.03"
+					+ "set balance = balance + avgBalance*.03,"
+					+ "profits = profits + avgBalance*.03 "
 					+ "where taxID = 5555";
 			String interestResults = "select * from MarketAccount where taxID = 5555";
 try {
@@ -195,7 +201,7 @@ try {
 		
 	}
 
-	class Go1Listener implements ActionListener {
+	class ReportListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
@@ -266,8 +272,31 @@ try {
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			// TODO Auto-generated method stub
+			String userInput = set_date.getText();
+			String setDate = "update MarketInfo  set date = ' "+ userInput + "'";
+			String date = "SELECT DATEDIFF('" + userInput + "', (select date from MarketInfo))";
+			int dateDiff= 0;
+			try {
+	            
+	            StarsRUs.statement = StarsRUs.connection.createStatement();
+	            ResultSet resultSet = StarsRUs.statement.executeQuery(date);
+	            if (!resultSet.equals("")){
+	            	resultSet.next();
+	            	dateDiff = Integer.parseInt(resultSet.getString(1));
+	            	StarsRUs.statement.execute(setDate);
+	            	for(int i = 0; i < dateDiff; i++){
+	            		close();
+	            	}
+	            	JOptionPane.showMessageDialog(null, "Date Changed");
+	            }
+	            else {
+					JOptionPane.showMessageDialog(null, "Not a valid date");
 
+	            }
+	
+	        } catch (SQLException ev) {
+	            ev.printStackTrace();
+	        }
 		}
 	}
 	
@@ -280,7 +309,6 @@ try {
 	            
 	            StarsRUs.statement = StarsRUs.connection.createStatement();
 	            boolean resultSet = StarsRUs.statement.execute(open);
-	            System.out.println("Transactions Deleted");
 	            JOptionPane.showMessageDialog(null, "Market Opened.","Open Market", 1);
 	            
 	        } catch (SQLException ev) {
@@ -296,6 +324,7 @@ try {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			close();
+			JOptionPane.showMessageDialog(null, "Market Closed.","Close Market", 1);
 				
 		}
 	}
@@ -322,7 +351,7 @@ try {
             StarsRUs.statement.addBatch(close_price);
             StarsRUs.statement.executeBatch();
             //System.out.println("Transactions Deleted");
-            JOptionPane.showMessageDialog(null, "Market Closed.","Close Market", 1);
+            
             
         } catch (SQLException ev) {
             ev.printStackTrace();
