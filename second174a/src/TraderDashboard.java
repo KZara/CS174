@@ -104,12 +104,31 @@ public class TraderDashboard {
 	        if (option == JOptionPane.OK_OPTION) {
 	        	if(checkBox.isSelected()){
 	        		// withdraw
-	        	}else{
-	        		// deposit
-	        		String query = "update MarketAccount  set balance = (balance + " + textField.getText() + ") where taxID = " +  currentTaxID +";";
+	        		String balanceQuery = "select balance - " + textField.getText() + " from MarketAccount  where taxID = " + currentTaxID + ";";
+	        		String withdrawStatement = "update MarketAccount  set balance = (balance - " + textField.getText() + ") where taxID = " +  currentTaxID +";";
+	        		
+	        		boolean hasEnoughMoney = true;
 	        		try {
 	        			StarsRUs.statement = StarsRUs.connection.createStatement();
-	        			boolean resultSet = StarsRUs.statement.execute(query);
+	        			ResultSet resultSet = StarsRUs.statement.executeQuery(balanceQuery);
+	        			if (resultSet.next())
+	        				if(resultSet.getInt(1) >= 0){
+	        					boolean resultSet2 = StarsRUs.statement.execute(withdrawStatement);
+	        				} else {
+	        					JOptionPane.showMessageDialog(null, "Not enough funds available!");
+	        				}
+	        		} catch (SQLException e) {
+	        			// TODO Auto-generated catch block
+	        			e.printStackTrace();
+	        		}
+	        		
+	        		System.out.println(hasEnoughMoney);
+	        	}else{
+	        		// deposit
+	        		String depositStatement = "update MarketAccount  set balance = (balance + " + textField.getText() + ") where taxID = " +  currentTaxID +";";
+	        		try {
+	        			StarsRUs.statement = StarsRUs.connection.createStatement();
+	        			boolean resultSet = StarsRUs.statement.execute(depositStatement);
 	        		} catch (SQLException e) {
 	        			// TODO Auto-generated catch block
 	        			e.printStackTrace();
