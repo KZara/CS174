@@ -36,8 +36,7 @@ public class LogInPage {
 		panel.add(isAdmin);
 		LogInPage logIn = new LogInPage();
 		JButton enterButton = new JButton("Enter");
-		
-		
+
 		enterButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -54,7 +53,7 @@ public class LogInPage {
 
 				checkList += "WHERE USERS.username = '";
 				checkList += username.getText();
-				checkList += "' AND USERS.password = '"; 
+				checkList += "' AND USERS.password = '";
 				checkList += password.getText().toString();
 				checkList += "'";
 				System.out.println(checkList);
@@ -62,16 +61,13 @@ public class LogInPage {
 					StarsRUs.statement = StarsRUs.connection.createStatement();
 					ResultSet resultSet = StarsRUs.statement.executeQuery(checkList);
 					if (!resultSet.next()) {
-						JOptionPane.showMessageDialog(null, "No match for username/password", "Error Message",
-								0);
+						JOptionPane.showMessageDialog(null, "No match for username/password", "Error Message", 0);
 						java.lang.System.exit(0);
 					}
 				} catch (SQLException e2) {
 					// TODO Auto-generated catch block
 					e2.printStackTrace();
 				}
-	           
-
 
 				// go to new page
 				frame.setVisible(false);

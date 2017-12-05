@@ -1,5 +1,4 @@
 
-
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
@@ -9,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -16,6 +16,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.mysql.jdbc.ResultSetMetaData;
 
@@ -27,7 +29,6 @@ public class TraderDashboard {
 
 	static String user;
 	static String currentTaxID = "";
-	
 
 	public static void createDashboard(String username) {
 
@@ -40,7 +41,7 @@ public class TraderDashboard {
 		Dimension dimen = new Dimension(800, 800);
 
 		frame.getContentPane().setPreferredSize(dimen);
-		JPanel panel = new JPanel(new GridLayout(0,2));
+		JPanel panel = new JPanel(new GridLayout(0, 2));
 
 		TraderDashboard d = new TraderDashboard();
 
@@ -57,7 +58,7 @@ public class TraderDashboard {
 		go_1.addActionListener(d.new Go1Listener());
 		movie_info = new JTextField("Type name of movie to see information");
 		JButton reviews = new JButton("Find Reviews");
-		reviews.addActionListener(d.new ReviewsListener());
+		// reviews.addActionListener(d.new ReviewsListener());
 		panel.add(deposit);
 		panel.add(buy);
 		panel.add(market_balance);
@@ -77,12 +78,13 @@ public class TraderDashboard {
 		try {
 			StarsRUs.statement = StarsRUs.connection.createStatement();
 			ResultSet resultSet = StarsRUs.statement.executeQuery(taxID);
-			if (resultSet.next()) currentTaxID = resultSet.getString(1);
+			if (resultSet.next())
+				currentTaxID = resultSet.getString(1);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        
+
 		System.out.println(currentTaxID);
 	}
 
@@ -90,7 +92,31 @@ public class TraderDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			
+
+	        JTextField textField = new JTextField();
+	        final JCheckBox checkBox = new JCheckBox();
+
+	        Object[] inputFields = {"Enter $ amount to deposit/withdraw", textField,
+	                "Withdraw? (Deposit is default)", checkBox};
+
+	        int option = JOptionPane.showConfirmDialog(null, inputFields, "Multiple Inputs", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+
+	        if (option == JOptionPane.OK_OPTION) {
+	        	if(checkBox.isSelected()){
+	        		// withdraw
+	        	}else{
+	        		// deposit
+	        		String query = "update MarketAccount  set balance = (balance + " + textField.getText() + ") where taxID = " +  currentTaxID +";";
+	        		try {
+	        			StarsRUs.statement = StarsRUs.connection.createStatement();
+	        			boolean resultSet = StarsRUs.statement.execute(query);
+	        		} catch (SQLException e) {
+	        			// TODO Auto-generated catch block
+	        			e.printStackTrace();
+	        		}
+	        		System.out.println("Deposit amount of $" + textField.getText());
+	        	}
+	        }
 		}
 
 	}
@@ -118,20 +144,19 @@ public class TraderDashboard {
 			String balanceQuery = "select balance from MarketAccount where taxID = " + currentTaxID;
 			String balance = "";
 			try {
-	            
-	            StarsRUs.statement = StarsRUs.connection.createStatement();
-	            ResultSet resultSet = StarsRUs.statement.executeQuery(balanceQuery);
-	
-	            if (resultSet.next()) balance = resultSet.getString(1);
-	
-	            
-	            
-	        } catch (SQLException ev) {
-	            ev.printStackTrace();
-	        }
-			
-			JOptionPane.showMessageDialog(null, "Balance = " + balance,balance, 1);
-			
+
+				StarsRUs.statement = StarsRUs.connection.createStatement();
+				ResultSet resultSet = StarsRUs.statement.executeQuery(balanceQuery);
+
+				if (resultSet.next())
+					balance = resultSet.getString(1);
+
+			} catch (SQLException ev) {
+				ev.printStackTrace();
+			}
+
+			JOptionPane.showMessageDialog(null, "Balance = " + balance, balance, 1);
+
 		}
 
 	}
@@ -140,45 +165,43 @@ public class TraderDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			String transactions = "select * from Transactions where taxID = '"
-					+ currentTaxID + "'";
+			String transactions = "select * from Transactions where taxID = '" + currentTaxID + "'";
 			String results = "";
 			try {
-	            
-	            StarsRUs.statement = StarsRUs.connection.createStatement();
-	            ResultSet resultSet = StarsRUs.statement.executeQuery(transactions);
-	
-	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
-	            int columnsNumber = rsmd.getColumnCount();
-	            if (!resultSet.next()){
-	            	JOptionPane.showMessageDialog(null, "No transactions yet!","Transactions", 1);
-	            	return;
-	            }
-	            	
-				
-	            while (resultSet.next()) {
-	            	  for (int i = 1; i <= columnsNumber; i++) {
-	                      if (i > 1) {
-	                    	  System.out.print(",  ");
-	                    	  results += ", ";
-	                      }
-	                      String columnValue = resultSet.getString(i);
-	                      results += columnValue + " ";
-	                      System.out.print(columnValue);
-	                  }
-	            	  results += "\n";
-	                  System.out.println("");
-	                  
-	            }
-	            
-	        } catch (SQLException ev) {
-	            ev.printStackTrace();
-	        }
+
+				StarsRUs.statement = StarsRUs.connection.createStatement();
+				ResultSet resultSet = StarsRUs.statement.executeQuery(transactions);
+
+				ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+				int columnsNumber = rsmd.getColumnCount();
+				if (!resultSet.next()) {
+					JOptionPane.showMessageDialog(null, "No transactions yet!", "Transactions", 1);
+					return;
+				}
+
+				while (resultSet.next()) {
+					for (int i = 1; i <= columnsNumber; i++) {
+						if (i > 1) {
+							System.out.print(",  ");
+							results += ", ";
+						}
+						String columnValue = resultSet.getString(i);
+						results += columnValue + " ";
+						System.out.print(columnValue);
+					}
+					results += "\n";
+					System.out.println("");
+
+				}
+
+			} catch (SQLException ev) {
+				ev.printStackTrace();
+			}
 			JTextArea msg = new JTextArea(results);
 			msg.setWrapStyleWord(true);
 
-			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			JScrollPane scrollPane = new JScrollPane(msg, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
 			JOptionPane.showMessageDialog(null, scrollPane);
 
@@ -187,104 +210,100 @@ public class TraderDashboard {
 	}
 
 	class Go1Listener implements ActionListener {
-		
+
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			String input =  actor_stock.getText();
-			if (input.length()!=3)
-				JOptionPane.showMessageDialog(null, "Not a valid Stock",input, 1);
-				
+			String input = actor_stock.getText();
+			if (input.length() != 3)
+				JOptionPane.showMessageDialog(null, "Not a valid Stock", input, 1);
+
 			String stock = "select S.current_price, A.act_name, S.stock_symbol  "
 					+ "from Stock S join ActorDirector A on A.stock_symbol = S.stock_symbol "
-					+ "where S.stock_symbol = '"
-					+ input + "'";
+					+ "where S.stock_symbol = '" + input + "'";
 
 			String results = "";
 			try {
-	            
-	            StarsRUs.statement = StarsRUs.connection.createStatement();
-	            ResultSet resultSet = StarsRUs.statement.executeQuery(stock);
-	
-	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
-	            int columnsNumber = rsmd.getColumnCount();
-	
-	            while (resultSet.next()) {
-	            	  for (int i = 1; i <= columnsNumber; i++) {
-	                      if (i > 1) {
-	                    	  System.out.print(",  ");
-	                    	  results += ", ";
-	                      }
-	                      String columnValue = resultSet.getString(i);
-	                      results += columnValue + " ";
-	                      System.out.print(columnValue);
-	                  }
-	            	  results += "\n";
-	                  System.out.println("");
-	                  
-	            }
-	            
-	        } catch (SQLException ev) {
-	            ev.printStackTrace();
-	        }
-			
+
+				StarsRUs.statement = StarsRUs.connection.createStatement();
+				ResultSet resultSet = StarsRUs.statement.executeQuery(stock);
+
+				ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+				int columnsNumber = rsmd.getColumnCount();
+
+				while (resultSet.next()) {
+					for (int i = 1; i <= columnsNumber; i++) {
+						if (i > 1) {
+							System.out.print(",  ");
+							results += ", ";
+						}
+						String columnValue = resultSet.getString(i);
+						results += columnValue + " ";
+						System.out.print(columnValue);
+					}
+					results += "\n";
+					System.out.println("");
+
+				}
+
+			} catch (SQLException ev) {
+				ev.printStackTrace();
+			}
+
 			JTextArea msg = new JTextArea(results);
 			msg.setWrapStyleWord(true);
 
-			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			JScrollPane scrollPane = new JScrollPane(msg, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
 			JOptionPane.showMessageDialog(null, scrollPane);
-	}
-
-	
-		class ReviewsListener implements ActionListener {
-
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			String input =  movie_info.getText();
-			String reviews = "select R.author,R.review,M.title "
-					+ "from Reviews R,Movies M "
-					+ "where R.movie_id = (select id from Movies m1  "
-					+ "where m1.title = '" + input + "' and m1.id = M.id)";
-			String results = "";
-			try {
-	            
-	            StarsRUs.statement = StarsRUs.connection.createStatement();
-	            ResultSet resultSet = StarsRUs.statement.executeQuery(reviews);
-	
-	            ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
-	            int columnsNumber = rsmd.getColumnCount();
-	
-	            while (resultSet.next()) {
-	            	  for (int i = 1; i <= columnsNumber; i++) {
-	                      if (i > 1) {
-	                    	  System.out.print(",  ");
-	                    	  results += ", ";
-	                      }
-	                      String columnValue = resultSet.getString(i);
-	                      results += columnValue + " ";
-	                      System.out.print(columnValue);
-	                  }
-	            	  results += "\n";
-	                  System.out.println("");
-	                  
-	            }
-	            
-	        } catch (SQLException ev) {
-	            ev.printStackTrace();
-	        }
-			
-			JTextArea msg = new JTextArea(results);
-			msg.setWrapStyleWord(true);
-
-			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-
-			JOptionPane.showMessageDialog(null, scrollPane);
-			
-
 		}
 
+		class ReviewsListener implements ActionListener {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				String input = movie_info.getText();
+				String reviews = "select R.author,R.review,M.title " + "from Reviews R,Movies M "
+						+ "where R.movie_id = (select id from Movies m1  " + "where m1.title = '" + input
+						+ "' and m1.id = M.id)";
+				String results = "";
+				try {
+
+					StarsRUs.statement = StarsRUs.connection.createStatement();
+					ResultSet resultSet = StarsRUs.statement.executeQuery(reviews);
+
+					ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+					int columnsNumber = rsmd.getColumnCount();
+
+					while (resultSet.next()) {
+						for (int i = 1; i <= columnsNumber; i++) {
+							if (i > 1) {
+								System.out.print(",  ");
+								results += ", ";
+							}
+							String columnValue = resultSet.getString(i);
+							results += columnValue + " ";
+							System.out.print(columnValue);
+						}
+						results += "\n";
+						System.out.println("");
+
+					}
+
+				} catch (SQLException ev) {
+					ev.printStackTrace();
+				}
+
+				JTextArea msg = new JTextArea(results);
+				msg.setWrapStyleWord(true);
+
+				JScrollPane scrollPane = new JScrollPane(msg, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+						JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+				JOptionPane.showMessageDialog(null, scrollPane);
+
+			}
+
+		}
 	}
-  }
 }
