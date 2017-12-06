@@ -26,15 +26,11 @@ public class WelcomePage {
 		Dimension button_size = new Dimension(20, 20);
 
 		WelcomePage welcome = new WelcomePage();
-		JButton debugButton = new JButton("Debug");
-		debugButton.addActionListener(welcome.new DebugListener());
-		debugButton.setPreferredSize(button_size);
-
+		
 		JButton logInButton = new JButton("Log In");
 		logInButton.addActionListener(welcome.new LogInListener());
 		logInButton.setPreferredSize(button_size);
 		panel.add(logInButton);
-		panel.add(debugButton);
 
 		frame.pack();
 		frame.setContentPane(panel);
@@ -43,16 +39,7 @@ public class WelcomePage {
 		return frame;
 	}
 
-	class DebugListener implements ActionListener {
 
-		@Override
-		public void actionPerformed(ActionEvent arg0) {
-			frame.setVisible(false);
-			frame.dispose();
-			// DebugPage.createSignUpPage();
-		}
-
-	}
 
 	class LogInListener implements ActionListener {
 

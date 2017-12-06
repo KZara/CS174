@@ -333,52 +333,116 @@ public class TraderDashboard {
 			}
 
 			if (marketOpen) {
-				
+
 				JTextField stockSymbol = new JTextField();
 				JTextField numberOfStock = new JTextField();
 				JTextField buyPrice = new JTextField();
-				
+
 				String stockInfo = "";
 				try {
 
 					StarsRUs.statement = StarsRUs.connection.createStatement();
-					ResultSet resultSet = StarsRUs.statement.executeQuery("select * from StockAccount where taxID = "  + currentTaxID + ";");
-					
-					
+					ResultSet resultSet = StarsRUs.statement
+							.executeQuery("select * from StockAccount where taxID = " + currentTaxID + ";");
+
 					ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
-		            int columnsNumber = rsmd.getColumnCount();
-		
-		            while (resultSet.next()) {
-		            	  for (int i = 1; i <= columnsNumber; i++) {
-		                      if (i > 1) {
-		                    	  stockInfo += ", ";
-		                      }
-		                      String columnValue = resultSet.getString(i);
-		                      stockInfo += columnValue + " ";
-		                  }
-		            	  stockInfo += "\n";
-		                  
-		            }
-		            
-		            System.out.println(stockInfo);
+					int columnsNumber = rsmd.getColumnCount();
+
+					while (resultSet.next()) {
+						for (int i = 1; i <= columnsNumber; i++) {
+							if (i > 1) {
+								stockInfo += ", ";
+							}
+							String columnValue = resultSet.getString(i);
+							stockInfo += columnValue + " ";
+						}
+						stockInfo += "\n";
+
+					}
+
+					System.out.println(stockInfo);
 
 				} catch (SQLException ev) {
 					ev.printStackTrace();
 				}
 
-				Object[] inputFields = { stockInfo, "Enter stock symbol", stockSymbol, "Enter number of stock", numberOfStock, "Enter buy price of stock to sell", buyPrice };
+				Object[] inputFields = { stockInfo, "Enter stock symbol", stockSymbol, "Enter number of stock",
+						numberOfStock, "Enter buy price of stock to sell", buyPrice };
 
 				int option = JOptionPane.showConfirmDialog(null, inputFields, "Multiple Inputs",
 						JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
 
 				if (option == JOptionPane.OK_OPTION) {
+					String stock_symbol = stockSymbol.getText();
+					String num_stock = numberOfStock.getText();
+					String buy_price = buyPrice.getText();
 
-					
+					String enoughStockQuery = "select quantity - " + num_stock + " from StockAccount where taxID = "
+							+ currentTaxID + " and stock_symbol = \'" + stock_symbol + "\' ;";
+
+					try {
+						// has enough stock to sell?
+						ResultSet resultSet = StarsRUs.statement.executeQuery(enoughStockQuery);
+						if (resultSet.next()) {
+							if (resultSet.getInt(1) >= 0) {
+								// money gained
+								String moneyGainedQuery = "select (" + num_stock + "*(select current_price from Stock where stock_symbol = \'"
+										+ stock_symbol + "\')) - 20";
+								ResultSet resultSet2 = StarsRUs.statement.executeQuery(moneyGainedQuery);
+								if (resultSet2.next()) {
+									
+									double moneyGained = resultSet2.getDouble(1);
+									//update marketAccount
+									String updateMarketAccountQuery = "update MarketAccount set balance = balance + "
+											+ moneyGained + ", profits = profits + " + moneyGained + "-(" + num_stock
+											+ "*" + buy_price + ") where taxID = " + currentTaxID + ";";
+									StarsRUs.statement.execute(updateMarketAccountQuery);
+
+									String soldAllQuery = "select quantity from StockAccount where stock_symbol = \'"
+											+ stock_symbol + "\' and taxID = " + currentTaxID + " and buy_price = " + buy_price +";";
+									System.out.println(soldAllQuery);
+									ResultSet resultSet3 = StarsRUs.statement.executeQuery(soldAllQuery);
+									resultSet3.next();
+									boolean soldAll = resultSet3.getInt(1) ==0;
+									// update stockAccount
+									if (soldAll) {
+										System.out.println("here");
+										String soldAllUpdate = "delete from StockAccount where taxID = " + currentTaxID
+												+ " and stock_symbol = \'" + stock_symbol + "\' and buy_price = "
+												+ buy_price + ";";
+										StarsRUs.statement.execute(soldAllUpdate);
+
+									} else {
+										System.out.println("else");
+										String notSoldAllUpdate = "update StockAccount set quantity = quantity - "
+												+ num_stock + " where taxID = " + currentTaxID
+												+ " and stock_symbol = \'" + stock_symbol + "\' and buy_price = "
+												+ buy_price + ";";
+										StarsRUs.statement.execute(notSoldAllUpdate);
+
+									}
+									
+									// insert transaction
+									
+									String insertTransaction = "insert into Transactions (type, taxID,numShares,moneyAmount, date, stock_symbol) "
+											+ "values('sell'," + currentTaxID + "," + numberOfStock.getText() + ","
+											+ (moneyGained+20) + ",(select date from MarketInfo),+\'"
+											+ stockSymbol.getText().toUpperCase() + "\');";
+									StarsRUs.statement.execute(insertTransaction);
+									
+									
+									
+
+								}
+							}
+						}
+
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+
 				}
-				
-				
-				
-				
+
 			}
 		}
 
