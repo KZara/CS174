@@ -292,6 +292,10 @@ public class TraderDashboard {
 							String updateMarketAccount = "update MarketAccount set balance = balance - " +  amountInvolved  + " where taxID = " + currentTaxID;
 							StarsRUs.statement.execute(updateMarketAccount);
 							
+							//Create transaction
+							String insertTransaction = "insert into Transactions (type, taxID,numShares,moneyAmount, date, stock_symbol) "
+									+ "values('buy'," + currentTaxID + "," + numberOfStock.getText() + "," + amountInvolved + ",(select date from MarketInfo),+\'" + stockSymbol.getText().toUpperCase()+ "\');";
+							StarsRUs.statement.execute(insertTransaction);
 						}
 
 					} catch (SQLException ev) {
