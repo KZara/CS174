@@ -47,31 +47,30 @@ public class TraderDashboard {
 
 		JButton deposit = new JButton("Deposit/Withdraw");
 		deposit.addActionListener(d.new DepositListener());
-		
+
 		JButton buy = new JButton("Buy");
 		buy.addActionListener(d.new BuyListener());
-		
+
 		JButton sell = new JButton("Sell");
 		sell.addActionListener(d.new SellListener());
-		
+
 		JButton market_balance = new JButton("See Balance");
 		market_balance.addActionListener(d.new BalanceListener());
-		
+
 		JButton transaction_history = new JButton("Transaction History");
 		transaction_history.addActionListener(d.new TransactionListener());
-		
+
 		actor_stock = new JTextField("Type stock symbol Here to see current price");
 		JButton find_stock = new JButton("Find Stock");
 		find_stock.addActionListener(d.new FindStockListener());
-		
+
 		movie_info = new JTextField("Type name of movie to see information");
 		JButton reviews = new JButton("Find Reviews");
 		reviews.addActionListener(d.new ReviewsListener());
-		
+
 		JButton top_reviews = new JButton("List Top Reviews");
 		top_reviews.addActionListener(d.new TopReviewsListener());
-		
-		
+
 		panel.add(deposit);
 		panel.add(buy);
 		panel.add(sell);
@@ -101,7 +100,7 @@ public class TraderDashboard {
 		}
 
 		System.out.println(currentTaxID);
-		
+
 	}
 
 	private String validate_stock(String input) {
@@ -160,7 +159,8 @@ public class TraderDashboard {
 							+ " from MarketAccount  where taxID = " + currentTaxID + ";";
 					String withdrawStatement = "update MarketAccount  set balance = (balance - " + textField.getText()
 							+ ") where taxID = " + currentTaxID + ";";
-					String withdrawTransaction = "insert into Transactions (type, taxID, numShares, moneyAmount, date) values(\"withdraw\", " + currentTaxID + ", 0, " + textField.getText() +", (select date from MarketInfo));";
+					String withdrawTransaction = "insert into Transactions (type, taxID, numShares, moneyAmount, date) values(\"withdraw\", "
+							+ currentTaxID + ", 0, " + textField.getText() + ", (select date from MarketInfo));";
 
 					try {
 						StarsRUs.statement = StarsRUs.connection.createStatement();
@@ -181,7 +181,8 @@ public class TraderDashboard {
 					// deposit
 					String depositStatement = "update MarketAccount  set balance = (balance + " + textField.getText()
 							+ ") where taxID = " + currentTaxID + ";";
-					String depositTransaction = "insert into Transactions (type, taxID, numShares, moneyAmount, date) values(\"deposit\", " + currentTaxID + ", 0, " + textField.getText() +", (select date from MarketInfo));";
+					String depositTransaction = "insert into Transactions (type, taxID, numShares, moneyAmount, date) values(\"deposit\", "
+							+ currentTaxID + ", 0, " + textField.getText() + ", (select date from MarketInfo));";
 					try {
 						StarsRUs.statement = StarsRUs.connection.createStatement();
 						boolean resultSet = StarsRUs.statement.execute(depositStatement);
@@ -201,8 +202,7 @@ public class TraderDashboard {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			boolean marketOpen = false;
-			
-			
+
 			// check if market is open
 			try {
 
@@ -215,93 +215,101 @@ public class TraderDashboard {
 			} catch (SQLException ev) {
 				ev.printStackTrace();
 			}
-			
-			if(marketOpen){
-				
+
+			if (marketOpen) {
+
 				JTextField stockSymbol = new JTextField();
 				JTextField numberOfStock = new JTextField();
 
-				Object[] inputFields = { "Enter stock symbol", stockSymbol, "Enter number of stock",
-						numberOfStock };
+				Object[] inputFields = { "Enter stock symbol", stockSymbol, "Enter number of stock", numberOfStock };
 
 				int option = JOptionPane.showConfirmDialog(null, inputFields, "Multiple Inputs",
 						JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
-				
+
 				if (option == JOptionPane.OK_OPTION) {
-					
+
 					// check if stock is valid
-					
+
 					if (stockSymbol.getText().length() != 3)
 						JOptionPane.showMessageDialog(null, "Not a valid Stock");
 
 					String results = validate_stock(stockSymbol.getText());
 					if (results == null || results.equals(""))
 						JOptionPane.showMessageDialog(null, "Not a valid Stock!");
-					
+
 					// check for enough funds
-					
-					String enoughFundsQuery = "select M.balance - (" + numberOfStock.getText() + "*S.current_price)-20  from MarketAccount M, Stock S where M.taxID = " + currentTaxID +" and S.stock_symbol = \'" + stockSymbol.getText() + "\';";
+
+					String enoughFundsQuery = "select M.balance - (" + numberOfStock.getText()
+							+ "*S.current_price)-20  from MarketAccount M, Stock S where M.taxID = " + currentTaxID
+							+ " and S.stock_symbol = \'" + stockSymbol.getText() + "\';";
 					boolean hasEnoughFunds = false;
 					try {
 						ResultSet resultSet = StarsRUs.statement.executeQuery(enoughFundsQuery);
 
-						if (resultSet.next()){
+						if (resultSet.next()) {
 							hasEnoughFunds = resultSet.getInt(1) >= 0;
 							System.out.println("balance - price = " + resultSet.getInt(1));
 						}
-						if(hasEnoughFunds){
+						if (hasEnoughFunds) {
 							// get amount of money involved in transaction
-							String amountInvolvedQuery = "select " + numberOfStock.getText() + "*(select current_price from Stock where stock_symbol = \'" + stockSymbol.getText() + "\') + 20;";
+							String amountInvolvedQuery = "select " + numberOfStock.getText()
+									+ "*(select current_price from Stock where stock_symbol = \'"
+									+ stockSymbol.getText() + "\') + 20;";
 							ResultSet resultSet2 = StarsRUs.statement.executeQuery(amountInvolvedQuery);
 							resultSet2.next();
 							double amountInvolved = resultSet2.getDouble(1);
 							System.out.println("amt involved = " + amountInvolved);
-							
-							// check if user already has stockaccount for this stock
-							String checkHasStockQuery = "select taxID,stock_symbol, buy_price from StockAccount  where taxID = " + currentTaxID + " and stock_symbol = \'" 
-														+ stockSymbol.getText() + "\' and buy_price = (select current_price from Stock where stock_symbol = \'" 
-														+ stockSymbol.getText() + "\'); ";
+
+							// check if user already has stockAccount for this
+							// stock
+							String checkHasStockQuery = "select taxID,stock_symbol, buy_price from StockAccount  where taxID = "
+									+ currentTaxID + " and stock_symbol = \'" + stockSymbol.getText()
+									+ "\' and buy_price = (select current_price from Stock where stock_symbol = \'"
+									+ stockSymbol.getText() + "\'); ";
 							ResultSet resultSet3 = StarsRUs.statement.executeQuery(checkHasStockQuery);
 							boolean hasStock = resultSet3.next();
-							if(hasStock){
+
+							// add to stockAccount or create new stockAccount if
+							// no account
+							if (hasStock) {
 								System.out.println("here");
-								String buyHasAccount = "update StockAccount set quantity = quantity + " + numberOfStock.getText() + " where taxID = " + currentTaxID + " and stock_symbol = \'" 
-										+ stockSymbol.getText() + "\' and buy_price = (select current_price from Stock where stock_symbol = \'" 
+								String buyHasAccount = "update StockAccount set quantity = quantity + "
+										+ numberOfStock.getText() + " where taxID = " + currentTaxID
+										+ " and stock_symbol = \'" + stockSymbol.getText()
+										+ "\' and buy_price = (select current_price from Stock where stock_symbol = \'"
 										+ stockSymbol.getText() + "\'); ";
 								StarsRUs.statement.execute(buyHasAccount);
 							} else {
 								System.out.println("else");
-								String buyNoAccount = "insert into StockAccount (buy_price, quantity, taxID, stock_symbol) values((select current_price from Stock where stock_symbol = \'" 
-														+ stockSymbol.getText() + "\')," 
-														+ numberOfStock.getText() + "," + currentTaxID +", \'" + stockSymbol.getText().toUpperCase() + "\');";
+								String buyNoAccount = "insert into StockAccount (buy_price, quantity, taxID, stock_symbol) values((select current_price from Stock where stock_symbol = \'"
+										+ stockSymbol.getText() + "\')," + numberOfStock.getText() + "," + currentTaxID
+										+ ", \'" + stockSymbol.getText().toUpperCase() + "\');";
 								System.out.println(buyNoAccount);
 								StarsRUs.statement.execute(buyNoAccount);
 							}
-							
+
+							// update balance and profits
+							String updateMarketAccount = "update MarketAccount set balance = balance - " +  amountInvolved  + " where taxID = " + currentTaxID;
+							StarsRUs.statement.execute(updateMarketAccount);
 							
 						}
 
 					} catch (SQLException ev) {
 						ev.printStackTrace();
 					}
-					
-					
-					
-					
+
 				}
-				
-				
+
 			}
 
 		}
 
 	}
-	
+
 	class SellListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-
 
 		}
 
@@ -366,7 +374,6 @@ public class TraderDashboard {
 			} catch (SQLException ev) {
 				ev.printStackTrace();
 			}
-			
 
 		}
 
@@ -430,23 +437,23 @@ public class TraderDashboard {
 		}
 
 	}
-	
+
 	class TopReviewsListener implements ActionListener {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			
+
 			JTextField startYear = new JTextField();
 			JTextField endYear = new JTextField();
 
-			Object[] inputFields = { "Enter start year", startYear, "Enter end year",
-					endYear };
+			Object[] inputFields = { "Enter start year", startYear, "Enter end year", endYear };
 
 			int option = JOptionPane.showConfirmDialog(null, inputFields, "Multiple Inputs",
 					JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
 			String results = "";
 			if (option == JOptionPane.OK_OPTION) {
-				String reviews = "select * from Movies where rating >= 5 and production_year >= \'" + startYear.getText()+ "\' and production_year <= \'" + endYear.getText() + "\';";
+				String reviews = "select * from Movies where rating >= 5 and production_year >= \'"
+						+ startYear.getText() + "\' and production_year <= \'" + endYear.getText() + "\';";
 				try {
 
 					StarsRUs.statement = StarsRUs.movieConnection.createStatement();
@@ -478,11 +485,9 @@ public class TraderDashboard {
 					ev.printStackTrace();
 				}
 			}
-			
-			
 
 		}
 
 	}
-	
+
 }
