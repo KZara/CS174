@@ -289,12 +289,15 @@ public class TraderDashboard {
 							}
 
 							// update balance and profits
-							String updateMarketAccount = "update MarketAccount set balance = balance - " +  amountInvolved  + " where taxID = " + currentTaxID;
+							String updateMarketAccount = "update MarketAccount set balance = balance - "
+									+ amountInvolved + " where taxID = " + currentTaxID;
 							StarsRUs.statement.execute(updateMarketAccount);
-							
-							//Create transaction
+
+							// Create transaction
 							String insertTransaction = "insert into Transactions (type, taxID,numShares,moneyAmount, date, stock_symbol) "
-									+ "values('buy'," + currentTaxID + "," + numberOfStock.getText() + "," + amountInvolved + ",(select date from MarketInfo),+\'" + stockSymbol.getText().toUpperCase()+ "\');";
+									+ "values('buy'," + currentTaxID + "," + numberOfStock.getText() + ","
+									+ amountInvolved + ",(select date from MarketInfo),+\'"
+									+ stockSymbol.getText().toUpperCase() + "\');";
 							StarsRUs.statement.execute(insertTransaction);
 						}
 
@@ -314,7 +317,69 @@ public class TraderDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			boolean marketOpen = false;
 
+			// check if market is open
+			try {
+
+				StarsRUs.statement = StarsRUs.connection.createStatement();
+				ResultSet resultSet = StarsRUs.statement.executeQuery("select marketOpen from MarketInfo;");
+
+				if (resultSet.next())
+					marketOpen = resultSet.getInt(1) == 1;
+
+			} catch (SQLException ev) {
+				ev.printStackTrace();
+			}
+
+			if (marketOpen) {
+				
+				JTextField stockSymbol = new JTextField();
+				JTextField numberOfStock = new JTextField();
+				JTextField buyPrice = new JTextField();
+				
+				String stockInfo = "";
+				try {
+
+					StarsRUs.statement = StarsRUs.connection.createStatement();
+					ResultSet resultSet = StarsRUs.statement.executeQuery("select * from StockAccount where taxID = "  + currentTaxID + ";");
+					
+					
+					ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+		            int columnsNumber = rsmd.getColumnCount();
+		
+		            while (resultSet.next()) {
+		            	  for (int i = 1; i <= columnsNumber; i++) {
+		                      if (i > 1) {
+		                    	  stockInfo += ", ";
+		                      }
+		                      String columnValue = resultSet.getString(i);
+		                      stockInfo += columnValue + " ";
+		                  }
+		            	  stockInfo += "\n";
+		                  
+		            }
+		            
+		            System.out.println(stockInfo);
+
+				} catch (SQLException ev) {
+					ev.printStackTrace();
+				}
+
+				Object[] inputFields = { stockInfo, "Enter stock symbol", stockSymbol, "Enter number of stock", numberOfStock, "Enter buy price of stock to sell", buyPrice };
+
+				int option = JOptionPane.showConfirmDialog(null, inputFields, "Multiple Inputs",
+						JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+
+				if (option == JOptionPane.OK_OPTION) {
+
+					
+				}
+				
+				
+				
+				
+			}
 		}
 
 	}
