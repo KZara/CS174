@@ -103,7 +103,7 @@ public class ManagerDashboard {
 			// average daily balance
 			String interest = "UPDATE MarketAccount "
 					+ "set balance = balance + avgBalance*.03,"
-					+ "profits = profits + avgBalance*.03 ";
+					+ "profits = profits + avgBalance*.03";
 			String interestResults = "select * from MarketAccount where taxID = 5555";
 			try {
 	            
