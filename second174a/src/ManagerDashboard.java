@@ -141,7 +141,11 @@ public class ManagerDashboard {
 					+ "from Customer C join Transactions T on C.taxID = T.taxID "
 					+ "join MarketAccount M on M.taxID = C.taxID "
 					+ "where C.name = \'" + customerName + "\'";
+			String commission = "select 20*COUNT(*) from Transactions T join Customer C "
+					+ "on  T.taxID = C.taxID "
+					+ "where T.type = 'buy' or T.type = 'sell' and  C.name = \'" + customerName + "\'"; 
 			String results = "";
+			String cresults = "";
 			try {
 	            
 	            StarsRUs.statement = StarsRUs.connection.createStatement();
@@ -165,6 +169,11 @@ public class ManagerDashboard {
 	                  
 	            }
 	            
+	            ResultSet resultSet2 = StarsRUs.statement.executeQuery(commission);
+	            resultSet2.next();
+	            cresults += resultSet2.getString(1);
+	            System.out.print(cresults);
+	            
 	        } catch (SQLException ev) {
 	            ev.printStackTrace();
 	        }
@@ -175,7 +184,8 @@ public class ManagerDashboard {
 			JScrollPane scrollPane = new JScrollPane(msg,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                     JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-			JOptionPane.showMessageDialog(null, scrollPane);
+			JOptionPane.showMessageDialog(null, scrollPane,"Transactions with email and name",1);
+			JOptionPane.showMessageDialog(null, cresults, "Commission",1);
 		}
 
 
