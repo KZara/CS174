@@ -136,8 +136,11 @@ public class ManagerDashboard {
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			String customerName = customer.getText();
-			String customerStatement = "select C.name, C.email, T.*  from Customer C join Transactions T  on C.taxID = T.taxID "
-					+ "where C.name = '" + customerName + "'";
+			
+			String customerStatement = "select C.name, C.email, T.*, M.initialBalance, M.balance, M.profits, 20*COUNT(*) as Commission "
+					+ "from Customer C join Transactions T on C.taxID = T.taxID "
+					+ "join MarketAccount M on M.taxID = C.taxID "
+					+ "where C.name = \'" + customerName + "\'";
 			String results = "";
 			try {
 	            
@@ -275,6 +278,7 @@ public class ManagerDashboard {
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			String user = customer.getText();
+			
 			String report = "select C.name, A. stock_symbol, A.quantity, M.balance from Customer C "
 					+ "join StockAccount A on C.taxID = A.taxID "
 					+ "join MarketAccount M on C.taxID = M.taxID "
@@ -418,7 +422,7 @@ public class ManagerDashboard {
 					String stock = validate_stock(stockSymbol.getText());
 					if (stock == null || stock.equals(""))
 						JOptionPane.showMessageDialog(null, "Not a valid Stock!");
-					String newPrice = "update Stock set current_price = " + setPrice.getText() + " where stock_symbol = '" + stock + "'";
+					String newPrice = "update Stock set current_price = " + setPrice.getText() + " where stock_symbol = '" + stockSymbol.getText() + "'";
 					try {
 		
 						StarsRUs.statement = StarsRUs.connection.createStatement();

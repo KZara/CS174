@@ -290,7 +290,7 @@ public class TraderDashboard {
 
 							// update balance and profits
 							String updateMarketAccount = "update MarketAccount set balance = balance - "
-									+ amountInvolved + " where taxID = " + currentTaxID;
+									+ amountInvolved + ", profits = profits - " + amountInvolved + " where taxID = " + currentTaxID;
 							StarsRUs.statement.execute(updateMarketAccount);
 
 							// Create transaction
@@ -392,10 +392,10 @@ public class TraderDashboard {
 								if (resultSet2.next()) {
 									
 									double moneyGained = resultSet2.getDouble(1);
+									System.out.print(moneyGained);
 									//update marketAccount
 									String updateMarketAccountQuery = "update MarketAccount set balance = balance + "
-											+ moneyGained + ", profits = profits + " + moneyGained + "-(" + num_stock
-											+ "*" + buy_price + ") where taxID = " + currentTaxID + ";";
+											+ moneyGained + ", profits = profits + " + moneyGained + "where taxID = " + currentTaxID + ";";
 									StarsRUs.statement.execute(updateMarketAccountQuery);
 
 									String soldAllQuery = "select quantity from StockAccount where stock_symbol = \'"
