@@ -403,7 +403,8 @@ public class TraderDashboard {
 									System.out.println(soldAllQuery);
 									ResultSet resultSet3 = StarsRUs.statement.executeQuery(soldAllQuery);
 									resultSet3.next();
-									boolean soldAll = resultSet3.getInt(1) ==0;
+									System.out.println(resultSet3.getInt(1));
+									boolean soldAll = (resultSet3.getInt(1) - Integer.parseInt(num_stock)) == 0;
 									// update stockAccount
 									if (soldAll) {
 										System.out.println("here");

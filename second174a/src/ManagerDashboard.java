@@ -137,7 +137,7 @@ public class ManagerDashboard {
 		public void actionPerformed(ActionEvent e) {
 			String customerName = customer.getText();
 			
-			String customerStatement = "select C.name, C.email, T.*, M.initialBalance, M.balance, M.profits, 20*COUNT(*) as Commission "
+			String customerStatement = "select C.name, C.email, T.*, M.initialBalance, M.balance, M.profits "
 					+ "from Customer C join Transactions T on C.taxID = T.taxID "
 					+ "join MarketAccount M on M.taxID = C.taxID "
 					+ "where C.name = \'" + customerName + "\'";
