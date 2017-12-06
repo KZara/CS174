@@ -101,6 +101,42 @@ public class TraderDashboard {
 		}
 
 		System.out.println(currentTaxID);
+		
+	}
+
+	private String validate_stock(String input) {
+		String stock = "select S.current_price, A.act_name, S.stock_symbol  "
+				+ "from Stock S join ActorDirector A on A.stock_symbol = S.stock_symbol " + "where S.stock_symbol = '"
+				+ input + "'";
+
+		String results = "";
+		try {
+
+			StarsRUs.statement = StarsRUs.connection.createStatement();
+			ResultSet resultSet = StarsRUs.statement.executeQuery(stock);
+
+			ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+			int columnsNumber = rsmd.getColumnCount();
+
+			while (resultSet.next()) {
+				for (int i = 1; i <= columnsNumber; i++) {
+					if (i > 1) {
+						System.out.print(",  ");
+						results += ", ";
+					}
+					String columnValue = resultSet.getString(i);
+					results += columnValue + " ";
+					System.out.print(columnValue);
+				}
+				results += "\n";
+				System.out.println("");
+
+			}
+			return results;
+		} catch (SQLException ev) {
+			ev.printStackTrace();
+		}
+		return null;
 	}
 
 	class DepositListener implements ActionListener {
@@ -164,8 +200,93 @@ public class TraderDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			boolean marketOpen = false;
+			
+			
+			// check if market is open
+			try {
 
+				StarsRUs.statement = StarsRUs.connection.createStatement();
+				ResultSet resultSet = StarsRUs.statement.executeQuery("select marketOpen from MarketInfo;");
 
+				if (resultSet.next())
+					marketOpen = resultSet.getInt(1) == 1;
+
+			} catch (SQLException ev) {
+				ev.printStackTrace();
+			}
+			
+			if(marketOpen){
+				
+				JTextField stockSymbol = new JTextField();
+				JTextField numberOfStock = new JTextField();
+
+				Object[] inputFields = { "Enter stock symbol", stockSymbol, "Enter number of stock",
+						numberOfStock };
+
+				int option = JOptionPane.showConfirmDialog(null, inputFields, "Multiple Inputs",
+						JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+				
+				if (option == JOptionPane.OK_OPTION) {
+					
+					// check if stock is valid
+					
+					if (stockSymbol.getText().length() != 3)
+						JOptionPane.showMessageDialog(null, "Not a valid Stock");
+
+					String results = validate_stock(stockSymbol.getText());
+					if (results == null || results.equals(""))
+						JOptionPane.showMessageDialog(null, "Not a valid Stock!");
+					
+					// check for enough funds
+					
+					String enoughFundsQuery = "select M.balance - (" + numberOfStock.getText() + "*S.current_price)-20  from MarketAccount M, Stock S where M.taxID = " + currentTaxID +" and S.stock_symbol = \'" + stockSymbol.getText() + "\';";
+					boolean hasEnoughFunds = false;
+					try {
+						ResultSet resultSet = StarsRUs.statement.executeQuery(enoughFundsQuery);
+
+						if (resultSet.next()){
+							hasEnoughFunds = resultSet.getInt(1) >= 0;
+							System.out.println(resultSet.getInt(1));
+						}
+						if(hasEnoughFunds){
+							// get amount of money involved in transaction
+							String amountInvolvedQuery = "select " + numberOfStock.getText() + "*(select current_price from Stock where stock_symbol = \'" + stockSymbol.getText() + "\') + 20;";
+							ResultSet resultSet2 = StarsRUs.statement.executeQuery(amountInvolvedQuery);
+							resultSet2.next();
+							double amountInvolved = resultSet2.getDouble(1);
+							System.out.println(amountInvolved);
+							
+							// check if user already has stockaccount for this stock
+							String checkHasStockQuery = "select taxID,stock_symbol, buy_price from StockAccount  where taxID = " + currentTaxID + " and stock_symbol = \'" 
+														+ stockSymbol.getText() + "\' and buy_price = (select current_price from Stock where stock_symbol = \'" 
+														+ stockSymbol.getText() + "\'); ";
+							ResultSet resultSet3 = StarsRUs.statement.executeQuery(amountInvolvedQuery);
+							boolean hasStock = resultSet3.next();
+							
+							if(hasStock){
+								String buyHasAccount = "update StockAccount set quantity = quantity + " + numberOfStock.getText() + ";";
+								
+							} else {
+								String buyNoAccount = "insert into StockAccount (buy_price, sell_price, quantity, taxID, stock_symbol) values((select current_price from Stock where stock_symbol = \'" 
+														+ stockSymbol.getText() + "\')," 
+														+ numberOfStock.getText() + "," + currentTaxID +", \'" + stockSymbol.getText() + "\');";
+							}
+							
+							
+						}
+
+					} catch (SQLException ev) {
+						ev.printStackTrace();
+					}
+					
+					
+					
+					
+				}
+				
+				
+			}
 
 		}
 
@@ -252,40 +373,11 @@ public class TraderDashboard {
 		public void actionPerformed(ActionEvent arg0) {
 			String input = actor_stock.getText();
 			if (input.length() != 3)
-				JOptionPane.showMessageDialog(null, "Not a valid Stock", input, 1);
+				JOptionPane.showMessageDialog(null, "Not a valid Stock");
 
-			String stock = "select S.current_price, A.act_name, S.stock_symbol  "
-					+ "from Stock S join ActorDirector A on A.stock_symbol = S.stock_symbol "
-					+ "where S.stock_symbol = '" + input + "'";
-
-			String results = "";
-			try {
-
-				StarsRUs.statement = StarsRUs.connection.createStatement();
-				ResultSet resultSet = StarsRUs.statement.executeQuery(stock);
-
-				ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
-				int columnsNumber = rsmd.getColumnCount();
-
-				while (resultSet.next()) {
-					for (int i = 1; i <= columnsNumber; i++) {
-						if (i > 1) {
-							System.out.print(",  ");
-							results += ", ";
-						}
-						String columnValue = resultSet.getString(i);
-						results += columnValue + " ";
-						System.out.print(columnValue);
-					}
-					results += "\n";
-					System.out.println("");
-
-				}
-				if (!results.equals(""))
-					JOptionPane.showMessageDialog(null, results);
-			} catch (SQLException ev) {
-				ev.printStackTrace();
-			}
+			String results = validate_stock(input);
+			if (results != null && !results.equals(""))
+				JOptionPane.showMessageDialog(null, results);
 
 		}
 	}
@@ -338,7 +430,51 @@ public class TraderDashboard {
 
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
+			
+			JTextField startYear = new JTextField();
+			JTextField endYear = new JTextField();
 
+			Object[] inputFields = { "Enter start year", startYear, "Enter end year",
+					endYear };
+
+			int option = JOptionPane.showConfirmDialog(null, inputFields, "Multiple Inputs",
+					JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+			String results = "";
+			if (option == JOptionPane.OK_OPTION) {
+				String reviews = "select * from Movies where rating >= 5 and production_year >= \'" + startYear.getText()+ "\' and production_year <= \'" + endYear.getText() + "\';";
+				try {
+
+					StarsRUs.statement = StarsRUs.movieConnection.createStatement();
+					ResultSet resultSet = StarsRUs.statement.executeQuery(reviews);
+
+					ResultSetMetaData rsmd = (ResultSetMetaData) resultSet.getMetaData();
+					int columnsNumber = rsmd.getColumnCount();
+
+					while (resultSet.next()) {
+						for (int i = 1; i <= columnsNumber; i++) {
+							if (i > 1) {
+								System.out.print(",  ");
+								results += ", ";
+							}
+							String columnValue = resultSet.getString(i);
+							results += columnValue + " ";
+							System.out.print(columnValue);
+						}
+						results += "\n";
+						System.out.println("");
+
+					}
+					if (!results.contentEquals(""))
+						JOptionPane.showMessageDialog(null, results);
+					else
+						JOptionPane.showMessageDialog(null, "No top movies found!");
+
+				} catch (SQLException ev) {
+					ev.printStackTrace();
+				}
+			}
+			
+			
 
 		}
 
