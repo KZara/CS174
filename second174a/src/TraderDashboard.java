@@ -247,7 +247,7 @@ public class TraderDashboard {
 
 						if (resultSet.next()){
 							hasEnoughFunds = resultSet.getInt(1) >= 0;
-							System.out.println(resultSet.getInt(1));
+							System.out.println("balance - price = " + resultSet.getInt(1));
 						}
 						if(hasEnoughFunds){
 							// get amount of money involved in transaction
@@ -255,22 +255,27 @@ public class TraderDashboard {
 							ResultSet resultSet2 = StarsRUs.statement.executeQuery(amountInvolvedQuery);
 							resultSet2.next();
 							double amountInvolved = resultSet2.getDouble(1);
-							System.out.println(amountInvolved);
+							System.out.println("amt involved = " + amountInvolved);
 							
 							// check if user already has stockaccount for this stock
 							String checkHasStockQuery = "select taxID,stock_symbol, buy_price from StockAccount  where taxID = " + currentTaxID + " and stock_symbol = \'" 
 														+ stockSymbol.getText() + "\' and buy_price = (select current_price from Stock where stock_symbol = \'" 
 														+ stockSymbol.getText() + "\'); ";
-							ResultSet resultSet3 = StarsRUs.statement.executeQuery(amountInvolvedQuery);
+							ResultSet resultSet3 = StarsRUs.statement.executeQuery(checkHasStockQuery);
 							boolean hasStock = resultSet3.next();
-							
 							if(hasStock){
-								String buyHasAccount = "update StockAccount set quantity = quantity + " + numberOfStock.getText() + ";";
-								
+								System.out.println("here");
+								String buyHasAccount = "update StockAccount set quantity = quantity + " + numberOfStock.getText() + " where taxID = " + currentTaxID + " and stock_symbol = \'" 
+										+ stockSymbol.getText() + "\' and buy_price = (select current_price from Stock where stock_symbol = \'" 
+										+ stockSymbol.getText() + "\'); ";
+								StarsRUs.statement.execute(buyHasAccount);
 							} else {
-								String buyNoAccount = "insert into StockAccount (buy_price, sell_price, quantity, taxID, stock_symbol) values((select current_price from Stock where stock_symbol = \'" 
+								System.out.println("else");
+								String buyNoAccount = "insert into StockAccount (buy_price, quantity, taxID, stock_symbol) values((select current_price from Stock where stock_symbol = \'" 
 														+ stockSymbol.getText() + "\')," 
-														+ numberOfStock.getText() + "," + currentTaxID +", \'" + stockSymbol.getText() + "\');";
+														+ numberOfStock.getText() + "," + currentTaxID +", \'" + stockSymbol.getText().toUpperCase() + "\');";
+								System.out.println(buyNoAccount);
+								StarsRUs.statement.execute(buyNoAccount);
 							}
 							
 							
